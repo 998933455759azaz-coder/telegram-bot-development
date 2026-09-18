@@ -1,4 +1,8 @@
-export default function Page() {
+export default async function Page() {
+  if (process.env.TELEGRAM_BOT_TOKEN) {
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? "https://telegram-bot-development-mu.vercel.app"}/api/telegram/setup`, { cache: "no-store" }).catch(() => undefined)
+  }
+
   return (
     <main
       style={{

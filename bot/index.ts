@@ -69,4 +69,10 @@ for (const label of ["➕ Admin qo'shish", "➖ Admin olish", "📣 Post yuboris
 
 bot.on("text", async (ctx) => { const session = sessions.get(ctx.from.id); if (!session) return; const amount = Number(ctx.message.text.replace(/[^0-9]/g, "")); if (session.action === "deposit" && amount > 0) await createOrder(ctx, "deposit", `Balans to'ldirish (${money(amount)})`, amount); else await ctx.reply("Iltimos, musbat summa kiriting.", cancelKeyboard()) })
 bot.on("callback_query", async (ctx) => { await ctx.answerCbQuery(); const data = "data" in ctx.callbackQuery ? ctx.callbackQuery.data : ""; if (data === "back") return ctx.reply("Asosiy menyu:", mainKeyboard()); const [action, value, rawAmount] = data.split(":"); if (action === "stars" || action === "premium" || action === "gift") return createOrder(ctx, action, `${action === "stars" ? "⭐ " : action === "premium" ? "🏆 Premium " : "🎁 "}${value}`, Number(rawAmount)); if ((action === "approve" || action === "cancel") && isAdmin(ctx)) { const order = orders.get(value); if (!order || order.status !== "pending") return ctx.reply("Bu buyurtma allaqachon ko'rib chiqilgan."); order.status = action === "approve" ? "approved" : "cancelled"; if (action === "approve" && order.type === "deposit") balances.set(order.userId, balance(order.userId) + order.amount); await bot.telegram.sendMessage(order.userId, action === "approve" ? `✅ Buyurtma #${order.id} tasdiqlandi.\nBalansingiz: ${money(balance(order.userId))}` : `❌ Buyurtma #${order.id} bekor qilindi.`); return ctx.editMessageText(`#${order.id} — ${action === "approve" ? "✅ TASDIQLANDI" : "❌ BEKOR QILINDI"}`) } })
-bot.catch((error) => console.error("[v0] Telegram bot xatosi:", error)); bot.launch().then(() => console.log("[v0] Stars bot ishga tushdi")); process.once("SIGINT", () => bot.stop("SIGINT")); process.once("SIGTERM", () => bot.stop("SIGTERM"))
+bot.catch((error) => console.error("[v0] Telegram bot xatosi:", error))
+
+export { bot }
+
+if (process.env.VERCEL !== "1" && process.env.TELEGRAM_WEBHOOK_MODE !== "true") {
+  bot.launch().then(() => console.log("[v0] Stars bot polling orqali ishga tushdi"))
+}
